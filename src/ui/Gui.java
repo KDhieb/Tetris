@@ -78,11 +78,10 @@ public class Gui extends Application {
                 game.descend();
                 update(game);
                 Thread.sleep(Game.getSpeed());
+                System.out.println("Blocks: " + game.getBlocks().size());
+                game.checkAndClearRows();
 //                game.clearFilledRows();
                 update(game);
-//                if (!canDescend) {
-//                    System.out.println("Cant descend");
-//                }
                 Thread.sleep(Game.getSpeed());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -129,9 +128,7 @@ public class Gui extends Application {
             @Override
             public void handle(KeyEvent event) {
                 switch (event.getCode()) {
-                    case LEFT:
-                        game.moveLeft();
-                         break;
+                    case LEFT: game.moveLeft(); break;
                     case RIGHT: game.moveRight(); break;
                 }
             }

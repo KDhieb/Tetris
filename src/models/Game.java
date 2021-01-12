@@ -2,10 +2,7 @@ package models;
 
 import models.shapes.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class Game {
@@ -63,15 +60,38 @@ public class Game {
         return shapeInPlay.canDescend(blocks);
     }
 
-    public void clearFilledRows() {
-        for (int i = 1; i <= BOARD_ROWS; i++) {
-            int rowNum = i;
-            Stream<Block> rowStream = blocks.stream().filter(b -> b.getRow() == rowNum);
-            if (rowStream.count() == BOARD_COLS) {
-                rowStream.forEach(b -> blocks.remove(b));
+
+    // EFFECTS: checks and clears filled rows
+    public void checkAndClearRows() {
+        HashMap<Integer, List<Block>> rowMap = new HashMap<>();
+        System.out.println("Step 1");
+        for (Block block : blocks) {
+            System.out.println("Step 2");
+            Integer rowNum = block.getRow();
+            if (rowMap.containsKey(rowNum)) {
+                System.out.println("Step 3");
+                List<Block> list = rowMap.get(rowNum);
+                list.add(block);
+                rowMap.put(rowNum, list);
+            } else {
+                System.out.println("Step 4");
+                List<Block> list = new ArrayList<>();
+                list.add(block);
+                rowMap.put(rowNum, list);
+            }
+        }
+        System.out.println("Step 5");
+        for (Integer row: rowMap.keySet()) {
+            System.out.println("Step 6");
+            List<Block> list = rowMap.get(row);
+            if (list.size() == BOARD_COLS) {
+                for (Block block: list) {
+                    blocks.remove(block);
+                }
             }
         }
     }
+
 
     // EFFECTS: If shape can descend, returns true and advances piece,
     // if can't descend, extracts blocks from shape and selects new shape
