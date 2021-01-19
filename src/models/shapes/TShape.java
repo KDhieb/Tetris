@@ -13,7 +13,22 @@ public class TShape extends Shape {
 
     @Override
     public void rotate(List<String> filledSquares) {
+        if (direction == Direction.DEFAULT) {
+            rotateInnerBlocks(filledSquares, 0,0,0,0,0,0,-1,-1);
+            direction = Direction.EAST;
 
+        } else if (direction == Direction.EAST) {
+            rotateInnerBlocks(filledSquares, 0,0,0,0,-1,1,0,0);
+            direction = Direction.NORTH;
+
+        } else if (direction == Direction.NORTH) {
+            rotateInnerBlocks(filledSquares, 1,1,0,0,0,0,0,0);
+            direction = Direction.WEST;
+
+        } else {
+            rotateInnerBlocks(filledSquares, -1,-1,0,0,1,-1,1,1);
+            direction = Direction.DEFAULT;
+        }
     }
 
 

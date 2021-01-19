@@ -2,14 +2,11 @@ package ui;
 
 import javafx.application.Application;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -18,12 +15,12 @@ import javafx.stage.Stage;
 import models.Block;
 import models.Game;
 
-import javax.swing.*;
 import java.util.HashMap;
 import java.util.List;
 
 public class Gui extends Application {
     Game game;
+    ScoreTracker scoreTracker;
     HashMap<String, Label> cells;
     StackPane root;
     GridPane gridPane;
@@ -38,6 +35,7 @@ public class Gui extends Application {
         primaryStage.setTitle("Tetris");
         this.root = new StackPane();
         game = new Game();
+        game.addObserver(new ScoreTracker());
         gridPane = new GridPane();
 
         createCells(Game.getBoardCols(), Game.getBoardRows());
@@ -78,9 +76,7 @@ public class Gui extends Application {
                 game.descend();
                 update(game);
                 Thread.sleep(Game.getSpeed());
-                System.out.println("Blocks: " + game.getBlocks().size());
                 game.checkAndClearRows();
-//                game.clearFilledRows();
                 update(game);
                 Thread.sleep(Game.getSpeed());
             } catch (InterruptedException e) {
@@ -108,7 +104,7 @@ public class Gui extends Application {
     private void initializeButtons() {
         Button btn = new Button();
         btn.setText("Start Game");
-        btn.setOnAction(event -> System.out.println("Game Starting"));
+//        btn.setOnAction(event -> System.out.println("Game Starting"));
         root.getChildren().add(btn);
     }
 

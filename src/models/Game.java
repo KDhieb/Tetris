@@ -4,7 +4,7 @@ import models.shapes.*;
 
 import java.util.*;
 
-public class Game {
+public class Game extends Observable {
     public static final int BOARD_COLS = 10;
     public static final int BOARD_ROWS = 20;
     private static final int SPEED = 200;
@@ -20,7 +20,8 @@ public class Game {
     public Game() {
         blocks = new ArrayList<>();
         filledSquares = new ArrayList<>();
-        shapeTypes = new ArrayList<>(Arrays.asList(ShapesEnum.LINE));
+        shapeTypes = new ArrayList<>(Arrays.asList(ShapesEnum.T, ShapesEnum.S, ShapesEnum.L,
+                ShapesEnum.LINE, ShapesEnum.BOX));
         selectNewShape();
         lostGame = false;
     }
@@ -76,6 +77,7 @@ public class Game {
             }
         }
         Integer lowestRow = null;
+        int rowScoreCount = 0;
         for (Integer row: rowMap.keySet()) {
             if (lowestRow == null) {
                 lowestRow = row;
@@ -84,12 +86,15 @@ public class Game {
             }
             List<Block> list = rowMap.get(row);
             if (list.size() == BOARD_COLS) {
+                rowScoreCount++;
                 for (Block block: list) {
                     blocks.remove(block);
                     filledSquares.remove(block.getPosition());
                 }
             }
         }
+        setChanged();
+        notifyObservers(rowScoreCount);
         if (lowestRow != null) {
             // move down
         }

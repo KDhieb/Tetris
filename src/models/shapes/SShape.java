@@ -13,8 +13,15 @@ public class SShape extends Shape {
 
     @Override
     public void rotate(List<String> filledSquares) {
-
+        if (direction == Direction.DEFAULT) {
+            rotateInnerBlocks(filledSquares, 0, 2, 0, 0,
+                    0, 0, -2, 0);
+            direction = Direction.EAST;
+        } else {
+            rotateInnerBlocks(filledSquares, 0, -2, 0, 0,
+                    0, 0, 2, 0);
+            direction = Direction.DEFAULT;
+        }
     }
-
 
 }
