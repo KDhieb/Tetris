@@ -130,6 +130,7 @@ public class Gui extends Application {
                 switch (event.getCode()) {
                     case LEFT: game.moveLeft(); break;
                     case RIGHT: game.moveRight(); break;
+                    case SPACE: game.rotateShape(); break;
                 }
             }
         });

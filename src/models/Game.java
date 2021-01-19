@@ -3,26 +3,24 @@ package models;
 import models.shapes.*;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 public class Game {
-    private static final int BOARD_COLS = 10;
-    private static final int BOARD_ROWS = 20;
-    private static final int SPEED = 150;
+    public static final int BOARD_COLS = 10;
+    public static final int BOARD_ROWS = 20;
+    private static final int SPEED = 200;
+    private final List<ShapesEnum> shapeTypes;
+    private final List<Block> blocks;
+    private final List<String> filledSquares;
     public boolean lostGame;
 
-    List<Block> blocks;
-    List<Shape> shapes;
-    List<ShapesEnum> shapeTypes;
     Shape shapeInPlay;
 
 
 
     public Game() {
         blocks = new ArrayList<>();
-        shapes = new ArrayList<>();
-        shapeTypes = new ArrayList<>(Arrays.asList(ShapesEnum.T, ShapesEnum.S, ShapesEnum.L,
-                ShapesEnum.BOX, ShapesEnum.LINE));
+        filledSquares = new ArrayList<>();
+        shapeTypes = new ArrayList<>(Arrays.asList(ShapesEnum.LINE));
         selectNewShape();
         lostGame = false;
     }
@@ -64,51 +62,53 @@ public class Game {
     // EFFECTS: checks and clears filled rows
     public void checkAndClearRows() {
         HashMap<Integer, List<Block>> rowMap = new HashMap<>();
-        System.out.println("Step 1");
+        //sorts blocks into lists of rows
         for (Block block : blocks) {
-            System.out.println("Step 2");
             Integer rowNum = block.getRow();
             if (rowMap.containsKey(rowNum)) {
-                System.out.println("Step 3");
                 List<Block> list = rowMap.get(rowNum);
                 list.add(block);
                 rowMap.put(rowNum, list);
             } else {
-                System.out.println("Step 4");
                 List<Block> list = new ArrayList<>();
                 list.add(block);
                 rowMap.put(rowNum, list);
             }
         }
-        System.out.println("Step 5");
+        Integer lowestRow = null;
         for (Integer row: rowMap.keySet()) {
-            System.out.println("Step 6");
+            if (lowestRow == null) {
+                lowestRow = row;
+            } else if (lowestRow < row) {
+                lowestRow = row;
+            }
             List<Block> list = rowMap.get(row);
             if (list.size() == BOARD_COLS) {
                 for (Block block: list) {
                     blocks.remove(block);
+                    filledSquares.remove(block.getPosition());
                 }
             }
         }
-    }
+        if (lowestRow != null) {
+            // move down
+        }
 
+    }
 
     // EFFECTS: If shape can descend, returns true and advances piece,
     // if can't descend, extracts blocks from shape and selects new shape
-    public Boolean descend() {
+    public void descend() {
         if (shapeInPlay.move(blocks, Moves.DOWN)) {
-            return true;
         } else {
             if (checkIfLost()) {
                 this.lostGame = true;
-                return false;
             }
-            shapes.add(shapeInPlay);
             for (Block block: shapeInPlay) {
+                filledSquares.add(block.getPosition());
                 blocks.add(block);
             }
             selectNewShape();
-            return false;
         }
     }
 
@@ -120,13 +120,10 @@ public class Game {
         shapeInPlay.move(blocks, Moves.RIGHT);
     }
 
-    public void rotateShapeLeft() {
-
+    public void rotateShape() {
+        shapeInPlay.rotate(filledSquares);
     }
 
-    public void rotateShapeRight() {
-
-    }
 
     public Boolean checkIfLost() {
         for (Block block: shapeInPlay) {
@@ -139,21 +136,8 @@ public class Game {
     }
 
 
-
-    public void update() {
-
-    }
-
     public List<Block> getBlocks() {
         return blocks;
-    }
-
-    public List<Shape> getShapes() {
-        return shapes;
-    }
-
-    public List<ShapesEnum> getShapeTypes() {
-        return shapeTypes;
     }
 
     public Shape getShapeInPlay() {

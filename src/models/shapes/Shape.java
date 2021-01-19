@@ -6,32 +6,57 @@ import models.Game;
 import models.Moves;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.awt.Graphics;
 
 public abstract class Shape implements Iterable<Block> {
     protected List<Block> blocks;
     String color;
+    Direction direction;
+    Block b1;
+    Block b2;
+    Block b3;
+    Block b4;
 
     public Shape() {
         blocks = new ArrayList<>();
+        direction = Direction.DEFAULT;
+    }
+
+    public void initializeBlocks(int row1, int col1, int row2, int col2,
+                                 int row3, int col3, int row4, int col4) {
+        this.b1 = new Block(col1,row1, color);
+        this.b2 = new Block(col2,row2, color);
+        this.b3 = new Block(col3,row3, color);
+        this.b4 = new Block(col4,row4, color);
+        blocks.addAll(Arrays.asList(b1, b2, b3, b4));
+    }
+
+    public abstract void rotate(List<String> filledSquares);
+
+    // MODIFIES: this
+    // EFFECTS: checks if each block can rotate safely, if so rotates them appropriately
+    // Numbers correspond to blocks (row1 and col1 represent row and column of b1)
+    protected void rotateInnerBlocks(List<String> filledSquares,
+                                     int row1, int col1, int row2, int col2,
+                                     int row3, int col3, int row4, int col4) {
+        Boolean canMoveB1 =  b1.canMove(filledSquares, row1, col1);
+        Boolean canMoveB2 = b2.canMove(filledSquares, row2, col2);
+        Boolean canMoveB3 = b3.canMove(filledSquares, row3, col3);
+        Boolean canMoveB4 = b4.canMove(filledSquares, row4, col4);
+
+        if (canMoveB1 && canMoveB2 && canMoveB3 && canMoveB4) {
+            b1.move(row1, col1);
+            b2.move(row2, col2);
+            b3.move(row3, col3);
+            b4.move(row4, col4);
+        }
     }
 
     public List<Block> getBlocks() {
         return blocks;
     }
-
-    public abstract void rotateLeft();
-
-    public abstract void rotateRight();
-
-//    public void descend() {
-//        for (Block block: blocks) {
-//            block.moveDown();
-//        }
-//    }
-
 
     public Boolean move(List<Block> blockList, Moves move) {
         switch (move) {
@@ -67,19 +92,6 @@ public abstract class Shape implements Iterable<Block> {
         }
     }
 
-    // EFFECTS: returns true if shape can descend without intersecting with any other shape
-//    public Boolean canDescend(List<Shape> shapesList, int speed) {
-//        for (Shape shape: shapesList) {
-//            if (this.intersects(shape, speed)) {
-//                return false;
-//            }
-//        } return true;
-//    }
-
-//    public Boolean canMove(List<Block> blockList, int speed) {
-//
-//    }
-
     public Boolean canDescend(List<Block> blockList) {
         if (reachesBoundary(1, 0)) {
             return false;
@@ -112,6 +124,8 @@ public abstract class Shape implements Iterable<Block> {
             }
         } return true;
     }
+
+
 
     private Boolean intersects(Block checkBlock, int rowMove, int columnMove) {
         int checkRow = checkBlock.getRow();

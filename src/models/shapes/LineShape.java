@@ -1,29 +1,25 @@
 package models.shapes;
 
-import models.Block;
-
-import java.util.Arrays;
+import java.util.List;
 
 public class LineShape extends Shape {
 
     public LineShape() {
         super();
         color = "lightblue";
-        Block b1 = new Block(4,0, color);
-        Block b2 = new Block(4,1, color);
-        Block b3 = new Block(4,2, color);
-        Block b4 = new Block(4,3, color);
-
-        blocks.addAll(Arrays.asList(b1, b2, b3, b4));
+        initializeBlocks(0,4, 1, 4, 2, 4, 3, 4);
     }
 
-    @Override
-    public void rotateLeft() {
-
+    public void rotate(List<String> filledSquares) {
+        if (direction == Direction.DEFAULT) {
+            rotateInnerBlocks(filledSquares, 0,0, -1, 1,
+                    -2, 2, -3,3);
+            direction = Direction.EAST;
+        } else {
+            rotateInnerBlocks(filledSquares, 0, 0, 1, -1,
+                    2,-2, 3, -3);
+            direction = Direction.DEFAULT;
+        }
     }
 
-    @Override
-    public void rotateRight() {
-
-    }
 }
