@@ -9,8 +9,12 @@ public class ScoreTracker implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        int rows = (int) arg;
-        score += rows * POINTS_PER_ROW;
-        System.out.println("SCORE: " + score);
+        if (arg == "Reset") {
+            score = 0;
+        } else {
+            int rows = (int) arg;
+            score += rows * POINTS_PER_ROW;
+            System.out.println("SCORE: " + score);
+        }
     }
 }

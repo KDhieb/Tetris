@@ -3,23 +3,25 @@ package models;
 import models.shapes.*;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Game extends Observable {
     public static final int BOARD_COLS = 10;
     public static final int BOARD_ROWS = 20;
-    private static final int SPEED = 200;
+    private static final int SPEED = 100;
     private final List<ShapesEnum> shapeTypes;
     private final List<Block> blocks;
     private final List<String> filledSquares;
+    private final HashMap<Integer, List<Block>> rowMap;
     public boolean lostGame;
 
     Shape shapeInPlay;
 
-
-
     public Game() {
         blocks = new ArrayList<>();
         filledSquares = new ArrayList<>();
+        rowMap = new HashMap<>();
         shapeTypes = new ArrayList<>(Arrays.asList(ShapesEnum.T, ShapesEnum.S, ShapesEnum.L,
                 ShapesEnum.LINE, ShapesEnum.BOX));
         selectNewShape();
@@ -56,38 +58,39 @@ public class Game extends Observable {
     }
 
     public Boolean canDescend() {
-        return shapeInPlay.canDescend(blocks);
+        return shapeInPlay.canMoveDown(filledSquares);
     }
 
+//    public void checkAndClearRows2() {
+//        for ()
+//    }
 
+    
     // EFFECTS: checks and clears filled rows
     public void checkAndClearRows() {
         HashMap<Integer, List<Block>> rowMap = new HashMap<>();
+        int lowestRowReached = 0;
+        int rowScoreCount = 0;
         //sorts blocks into lists of rows
         for (Block block : blocks) {
             Integer rowNum = block.getRow();
             if (rowMap.containsKey(rowNum)) {
-                List<Block> list = rowMap.get(rowNum);
-                list.add(block);
-                rowMap.put(rowNum, list);
+                rowMap.get(rowNum).add(block);
             } else {
                 List<Block> list = new ArrayList<>();
                 list.add(block);
                 rowMap.put(rowNum, list);
             }
         }
-        Integer lowestRow = null;
-        int rowScoreCount = 0;
         for (Integer row: rowMap.keySet()) {
-            if (lowestRow == null) {
-                lowestRow = row;
-            } else if (lowestRow < row) {
-                lowestRow = row;
-            }
-            List<Block> list = rowMap.get(row);
-            if (list.size() == BOARD_COLS) {
+            List<Block> currentRow = rowMap.get(row);
+            // if row is full, remove all blocks
+            if (currentRow.size() == BOARD_COLS) {
+                if (row > lowestRowReached) {
+                    lowestRowReached = row;
+                }
                 rowScoreCount++;
-                for (Block block: list) {
+                for (Block block: currentRow) {
                     blocks.remove(block);
                     filledSquares.remove(block.getPosition());
                 }
@@ -95,17 +98,22 @@ public class Game extends Observable {
         }
         setChanged();
         notifyObservers(rowScoreCount);
-        if (lowestRow != null) {
-            // move down
-        }
+//        if (lowestRowReached != 0) {
+//            for (int i = lowestRowReached - 1; i >= 0; i-- ) {
+//                for (Block block: rowMap.get(i)) {
+//                    if (block.canMove(filledSquares, rowScoreCount, 0)) {
+//                        block.move(rowScoreCount, 0);
+//                    }
+//                }
+//            }
+//        }
 
     }
 
     // EFFECTS: If shape can descend, returns true and advances piece,
     // if can't descend, extracts blocks from shape and selects new shape
     public void descend() {
-        if (shapeInPlay.move(blocks, Moves.DOWN)) {
-        } else {
+        if (!shapeInPlay.move(filledSquares, Moves.DOWN)) {
             if (checkIfLost()) {
                 this.lostGame = true;
             }
@@ -118,11 +126,11 @@ public class Game extends Observable {
     }
 
     public void moveLeft() {
-        shapeInPlay.move(blocks, Moves.LEFT);
+        shapeInPlay.move(filledSquares, Moves.LEFT);
     }
 
     public void moveRight() {
-        shapeInPlay.move(blocks, Moves.RIGHT);
+        shapeInPlay.move(filledSquares, Moves.RIGHT);
     }
 
     public void rotateShape() {
@@ -138,6 +146,13 @@ public class Game extends Observable {
             }
         }
         return false;
+    }
+
+    public void resetGame() {
+        notifyObservers("Reset");
+        filledSquares.clear();
+        blocks.clear();
+        selectNewShape();
     }
 
 

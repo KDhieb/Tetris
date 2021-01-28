@@ -1,7 +1,10 @@
 package ui;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -12,11 +15,16 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import models.Block;
 import models.Game;
+import javafx.scene.layout.BorderPane;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 public class Gui extends Application {
     Game game;
@@ -24,7 +32,8 @@ public class Gui extends Application {
     HashMap<String, Label> cells;
     StackPane root;
     GridPane gridPane;
-    Scene scene;
+    Scene gameScene;
+    BorderPane mainBorder;
 
     public static void main(String[] args) {
         launch(args);
@@ -37,14 +46,18 @@ public class Gui extends Application {
         game = new Game();
         game.addObserver(new ScoreTracker());
         gridPane = new GridPane();
-
+        mainBorder = new BorderPane();
+        mainBorder.setLeft(gridPane);
         createCells(Game.getBoardCols(), Game.getBoardRows());
-        initializeButtons();
-        scene = new Scene(gridPane, 500, 500);
-//        primaryStage.setScene(new Scene(gridPane, 500, 500));
-        primaryStage.setScene(scene);
+        initializeRightPanel();
+//        gameScene = new Scene(gridPane, 500, 500);
+        gameScene = new Scene(mainBorder, 500, 500);
+
+        primaryStage.setScene(gameScene);
         primaryStage.show();
-        Task task = new Task<Void>() {
+//        mainBorder.setLeft(gridPane);
+
+        Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
                 runGame();
@@ -69,16 +82,27 @@ public class Gui extends Application {
         }
     }
 
+    public void initializeDelay() {
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("running");
+            }
+        };
+    }
+
     public void runGame() {
         initializeEventHandlers();
         while (!game.lostGame) {
             try {
                 game.descend();
                 update(game);
-                Thread.sleep(Game.getSpeed());
+//                Thread.sleep(Game.getSpeed());
+                TimeUnit.MILLISECONDS.sleep(100);
                 game.checkAndClearRows();
                 update(game);
-                Thread.sleep(Game.getSpeed());
+//                Thread.sleep(Game.getSpeed());
+                TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -101,11 +125,31 @@ public class Gui extends Application {
         }
     }
 
+    private void initializeRightPanel() {
+        initializeButtons();
+        initializeLabels();
+    }
+
+    public void restartGame() {
+        game.resetGame();
+        try {
+            TimeUnit.MILLISECONDS.sleep(300);
+        } catch (InterruptedException e) {
+            System.out.println("Interrupted Exception thrown!");
+        }
+    }
+
+
+
     private void initializeButtons() {
-        Button btn = new Button();
-        btn.setText("Start Game");
-//        btn.setOnAction(event -> System.out.println("Game Starting"));
-        root.getChildren().add(btn);
+        Button resetBtn = new Button();
+        resetBtn.setText("Reset Game");
+        resetBtn.setOnAction(event -> restartGame());
+        resetBtn.setFocusTraversable(false);
+        mainBorder.setRight(resetBtn);
+    }
+
+    private void initializeLabels() {
     }
 
 
@@ -120,7 +164,7 @@ public class Gui extends Application {
     }
 
     public void initializeEventHandlers() {
-        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+        gameScene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
                 switch (event.getCode()) {

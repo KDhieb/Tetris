@@ -58,71 +58,59 @@ public abstract class Shape implements Iterable<Block> {
         return blocks;
     }
 
-    public Boolean move(List<Block> blockList, Moves move) {
+    public Boolean move(List<String> filledSquares, Moves move) {
         switch (move) {
             case DOWN:
-                if (canDescend(blockList)) {
+                if (canMoveDown(filledSquares)) {
                     for (Block block: blocks) {
                         block.moveDown();
                     }
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
+
             case LEFT:
-                if (canMoveLeft(blockList)) {
+                if (canMoveLeft(filledSquares)) {
                     for (Block block: blocks) {
                         block.moveLeft();
                     }
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
+
             case RIGHT:
-                if (canMoveRight(blockList)) {
+                if (canMoveRight(filledSquares)) {
                     for (Block block: blocks) {
                         block.moveRight();
                     }
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
+
             default:
                 throw new RuntimeException();
         }
     }
 
-    public Boolean canDescend(List<Block> blockList) {
-        if (reachesBoundary(1, 0)) {
-            return false;
-        }
-        for (Block block: blockList) {
-            if (intersects(block, 1, 0)) {
+    private Boolean canMove(List<String> filledSquares, int rowMove, int columnMove) {
+        for (Block block: blocks) {
+            if (!block.canMove(filledSquares, rowMove, columnMove)) {
                 return false;
             }
-        } return true;
+        }
+        return true;
     }
 
-    private Boolean canMoveLeft(List<Block> blockList) {
-        if (reachesBoundary(0, -1)) {
-            return false;
-        }
-        for (Block block: blockList) {
-            if (intersects(block, 0, -1)) {
-                return false;
-            }
-        } return true;
+    public Boolean canMoveDown(List<String> filledSquares) {
+        return canMove(filledSquares, 1, 0);
     }
 
-    private Boolean canMoveRight(List<Block> blockList) {
-        if (reachesBoundary(0, 1)) {
-            return false;
-        }
-        for (Block block: blockList) {
-            if (intersects(block, 0, 1)) {
-                return false;
-            }
-        } return true;
+    private Boolean canMoveLeft(List<String> filledSquares) {
+        return canMove(filledSquares, 0, -1);
+    }
+
+    private Boolean canMoveRight(List<String> filledSquares) {
+        return canMove(filledSquares, 0, 1);
     }
 
 

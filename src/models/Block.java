@@ -1,7 +1,6 @@
 package models;
 
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Block {
@@ -24,31 +23,19 @@ public class Block {
 
     public void moveLeft() {
         move(0, -1);
+        System.out.println("Block Pos move left: " + position);
     }
 
     public void moveRight() {
         move(0, 1);
     }
 
-
-
-    public Integer getColumn() {
-        return column;
-    }
-
-    public Integer getRow() {
-        return row;
-    }
-
-
-    public Boolean canMove(List<String> filledSquares, int rowUnits, int columnUnits) {
-        String regexPattern = (Game.BOARD_ROWS) + ",\\d+|\\d+," + (Game.BOARD_COLS) + "|-1,\\d+";
-        String newPosition = String.format("%d,%d", row + rowUnits, column + columnUnits);
-        if (Pattern.matches(regexPattern,newPosition)){
-            return false;
+    public void drop() {
+        for (int i = 0; i < Game.BOARD_COLS; i++) {
+            //
         }
-        return !filledSquares.contains(String.format("%d,%d", row + rowUnits, column + columnUnits));
     }
+
 
     public void move(int rowUnits, int columnUnits) {
         this.row += rowUnits;
@@ -56,23 +43,36 @@ public class Block {
         updatePosition();
     }
 
+    // EFFECTS: Checks if block will move out of bounds
+    // Then checks if block will intersect with another block
+    public Boolean canMove(List<String> filledSquares, int rowUnits, int columnUnits) {
+        String regexPattern = (Game.BOARD_ROWS) + ",\\d+|\\d+," + (Game.BOARD_COLS) + "|\\d+,-1";
+        String newPosition = String.format("%d,%d", row + rowUnits, column + columnUnits);
+        if (Pattern.matches(regexPattern,newPosition)){
+            return false;
+        }
+        return !filledSquares.contains(String.format("%d,%d", row + rowUnits, column + columnUnits));
+    }
+
+
     public String getColor() {
         return color;
     }
 
-    public void setColumn(Integer column) {
-        this.column = column;
-    }
-
-    public void setRow(Integer row) {
-        this.row = row;
-    }
-
+    // Updates string position
     public void updatePosition() {
         this.position = String.format("%d,%d", row, column);
     }
 
     public String getPosition() {
         return position;
+    }
+
+    public Integer getColumn() {
+        return column;
+    }
+
+    public Integer getRow() {
+        return row;
     }
 }
