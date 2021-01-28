@@ -1,29 +1,25 @@
 package ui;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.util.Duration;
+import javafx.stage.WindowEvent;
 import models.Block;
 import models.Game;
 import javafx.scene.layout.BorderPane;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 public class Gui extends Application {
@@ -34,6 +30,9 @@ public class Gui extends Application {
     GridPane gridPane;
     Scene gameScene;
     BorderPane mainBorder;
+    Label scoreLabel;
+    Label messageLabel;
+    Thread gameThread;
 
     public static void main(String[] args) {
         launch(args);
@@ -44,28 +43,46 @@ public class Gui extends Application {
         primaryStage.setTitle("Tetris");
         this.root = new StackPane();
         game = new Game();
-        game.addObserver(new ScoreTracker());
+        scoreTracker = new ScoreTracker();
+        game.addObserver(scoreTracker);
         gridPane = new GridPane();
+        gridPane.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID,
+                CornerRadii.EMPTY,BorderWidths.DEFAULT)));
         mainBorder = new BorderPane();
         mainBorder.setLeft(gridPane);
         createCells(Game.getBoardCols(), Game.getBoardRows());
         initializeRightPanel();
 //        gameScene = new Scene(gridPane, 500, 500);
-        gameScene = new Scene(mainBorder, 500, 500);
+        gameScene = new Scene(mainBorder, 500, 502);
 
         primaryStage.setScene(gameScene);
         primaryStage.show();
-//        mainBorder.setLeft(gridPane);
+        setQuitOnWindowClose(primaryStage);
 
-        Task<Void> task = new Task<Void>() {
+        startGameThread();
+    }
+
+
+    private void startGameThread() {
+        Task < Void > task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
                 runGame();
                 return null;
             }
         };
-        Thread thread = new Thread(task);
-        thread.start();
+        gameThread = new Thread(task);
+        gameThread.start();
+    }
+
+    private void setQuitOnWindowClose(Stage primaryStage) {
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                Platform.exit();
+                System.exit(0);
+            }
+        });
     }
 
     private void createCells(int columns, int rows) {
@@ -82,31 +99,22 @@ public class Gui extends Application {
         }
     }
 
-    public void initializeDelay() {
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                System.out.println("running");
-            }
-        };
-    }
-
     public void runGame() {
         initializeEventHandlers();
         while (!game.lostGame) {
             try {
                 game.descend();
                 update(game);
-//                Thread.sleep(Game.getSpeed());
-                TimeUnit.MILLISECONDS.sleep(100);
+                updateScore();
+                TimeUnit.MILLISECONDS.sleep(Game.getSpeed());
                 game.checkAndClearRows();
                 update(game);
-//                Thread.sleep(Game.getSpeed());
-                TimeUnit.MILLISECONDS.sleep(100);
+                TimeUnit.MILLISECONDS.sleep(Game.getSpeed());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
+        updateMessageLabel("GAME OVER!");
     }
 
     private void update(Game game) {
@@ -114,7 +122,6 @@ public class Gui extends Application {
             label.setBackground(new Background(new BackgroundFill(Paint.valueOf("whitesmoke"),
                     CornerRadii.EMPTY, Insets.EMPTY)));
         }
-
         List<Block> blocks =  game.getBlocks();
         for (Block block: blocks) {
             colorCell(block.getColumn(), block.getRow(), block.getColor());
@@ -123,35 +130,47 @@ public class Gui extends Application {
         for (Block block: game.getShapeInPlay()) {
             colorCell(block.getColumn(), block.getRow(), block.getColor());
         }
+
+    }
+
+
+    private void updateScore() {
+        Platform.runLater(() -> scoreLabel.setText("SCORE: " + scoreTracker.getScore()));
+    }
+
+    private void updateMessageLabel(String msg){
+        Platform.runLater(() -> messageLabel.setText(msg));
     }
 
     private void initializeRightPanel() {
-        initializeButtons();
-        initializeLabels();
+        BorderPane rightPane = new BorderPane();
+        mainBorder.setRight(rightPane);
+        initializeButtons(rightPane);
+        initializeLabels(rightPane);
     }
 
-    public void restartGame() {
-        game.resetGame();
-        try {
-            TimeUnit.MILLISECONDS.sleep(300);
-        } catch (InterruptedException e) {
-            System.out.println("Interrupted Exception thrown!");
-        }
-    }
-
-
-
-    private void initializeButtons() {
+    private void initializeButtons(BorderPane rightPane) {
         Button resetBtn = new Button();
         resetBtn.setText("Reset Game");
         resetBtn.setOnAction(event -> restartGame());
         resetBtn.setFocusTraversable(false);
-        mainBorder.setRight(resetBtn);
+        rightPane.setBottom(resetBtn);
+        rightPane.setPadding(new Insets(10,50,10,0));
+
     }
 
-    private void initializeLabels() {
-    }
+    private void initializeLabels(BorderPane rightPane) {
+        scoreLabel = new Label("SCORE: 0");
+        scoreLabel.setFont(new Font(24));
+        scoreLabel.setMinSize(150, 20);
 
+        messageLabel = new Label("");
+        messageLabel.setFont(new Font(30));
+        messageLabel.setMinSize(150, 20);
+
+        rightPane.setTop(scoreLabel);
+        rightPane.setCenter(messageLabel);
+    }
 
     private void colorCell(int col, int row, String color) {
         Label label = cells.get(getCellKey(col, row));
@@ -163,15 +182,24 @@ public class Gui extends Application {
         return String.format("%s%s", col, row);
     }
 
+    public void restartGame() {
+        game.resetGame();
+        updateMessageLabel("");
+        gameThread.stop();
+        startGameThread();
+        try {
+            TimeUnit.MILLISECONDS.sleep(300);
+        } catch (InterruptedException e) {
+            System.out.println("Interrupted Exception thrown!");
+        }
+    }
+
     public void initializeEventHandlers() {
-        gameScene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                switch (event.getCode()) {
-                    case LEFT: game.moveLeft(); break;
-                    case RIGHT: game.moveRight(); break;
-                    case SPACE: game.rotateShape(); break;
-                }
+        gameScene.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case LEFT: game.moveLeft(); break;
+                case RIGHT: game.moveRight(); break;
+                case SPACE: game.rotateShape(); break;
             }
         });
     }

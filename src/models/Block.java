@@ -23,7 +23,6 @@ public class Block {
 
     public void moveLeft() {
         move(0, -1);
-        System.out.println("Block Pos move left: " + position);
     }
 
     public void moveRight() {

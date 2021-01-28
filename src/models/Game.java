@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public class Game extends Observable {
     public static final int BOARD_COLS = 10;
     public static final int BOARD_ROWS = 20;
-    private static final int SPEED = 100;
+    private static final int SPEED = 150;
     private final List<ShapesEnum> shapeTypes;
     private final List<Block> blocks;
     private final List<String> filledSquares;
@@ -61,10 +61,6 @@ public class Game extends Observable {
         return shapeInPlay.canMoveDown(filledSquares);
     }
 
-//    public void checkAndClearRows2() {
-//        for ()
-//    }
-
     
     // EFFECTS: checks and clears filled rows
     public void checkAndClearRows() {
@@ -99,9 +95,13 @@ public class Game extends Observable {
         setChanged();
         notifyObservers(rowScoreCount);
 //        if (lowestRowReached != 0) {
+//            System.out.println("1?");
 //            for (int i = lowestRowReached - 1; i >= 0; i-- ) {
+//                System.out.println("2?");
 //                for (Block block: rowMap.get(i)) {
+//                    System.out.println("3?");
 //                    if (block.canMove(filledSquares, rowScoreCount, 0)) {
+//                        System.out.println("4?");
 //                        block.move(rowScoreCount, 0);
 //                    }
 //                }
@@ -114,6 +114,7 @@ public class Game extends Observable {
     // if can't descend, extracts blocks from shape and selects new shape
     public void descend() {
         if (!shapeInPlay.move(filledSquares, Moves.DOWN)) {
+            System.out.println("0??");
             if (checkIfLost()) {
                 this.lostGame = true;
             }
@@ -150,6 +151,7 @@ public class Game extends Observable {
 
     public void resetGame() {
         notifyObservers("Reset");
+        lostGame = false;
         filledSquares.clear();
         blocks.clear();
         selectNewShape();
