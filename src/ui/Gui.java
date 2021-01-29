@@ -3,7 +3,6 @@ package ui;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -13,7 +12,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import models.Block;
 import models.Game;
 import javafx.scene.layout.BorderPane;
@@ -24,16 +22,17 @@ import java.util.concurrent.TimeUnit;
 
 // Represents graphical user interface of game
 public class Gui extends Application {
-    Game game;
-    ScoreTracker scoreTracker;
-    HashMap<String, Label> cells;
-    StackPane root;
-    GridPane gridPane;
-    Scene mainScene;
-    BorderPane mainBorder;
-    Label scoreLabel;
-    Label messageLabel;
-    Thread gameThread;
+    private Game game;
+    private ScoreTracker scoreTracker;
+    private HashMap<String, Label> cells;
+    private GridPane gridPane;
+    private Scene mainScene;
+    private BorderPane mainBorder;
+    private Label scoreLabel;
+    private Label messageLabel;
+    private Thread gameThread;
+    private final String BLANK_CELL_COLOR = "black";
+    private final Color CELL_BORDER_COLOR = Color.DARKGRAY;
 
     public static void main(String[] args) {
         launch(args);
@@ -43,7 +42,6 @@ public class Gui extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Tetris");
-        this.root = new StackPane();
         mainBorder = new BorderPane();
         mainScene = new Scene(mainBorder, 500, 502);
 
@@ -130,9 +128,29 @@ public class Gui extends Application {
         rightPane.setCenter(messageLabel);
     }
 
-    // EFFECTS: color cells based on given shape color
+    // EFFECTS: Creates all game cells and adds to layout
+    private void createCells(int columns, int rows) {
+        cells = new HashMap<>();
+        for (int col=0; col < columns; col++ ) {
+            for (int row=0; row < rows; row++ ) {
+                Label label = new Label(" ");
+                label.setMinSize(25, 25);
+                colorCell(label, BLANK_CELL_COLOR);
+                cells.put(getCellKey(col, row), label);
+                gridPane.add(label, col, row);
+            }
+        }
+    }
+
+    // EFFECTS: color cell based on given coordinates and color
     private void colorCell(int col, int row, String color) {
         Label label = cells.get(getCellKey(col, row));
+        label.setBackground(new Background(new BackgroundFill(Paint.valueOf(color),
+                CornerRadii.EMPTY, Insets.EMPTY)));
+    }
+
+    // EFFECTS: color cells based on given label and color
+    private void colorCell(Label label, String color) {
         label.setBackground(new Background(new BackgroundFill(Paint.valueOf(color),
                 CornerRadii.EMPTY, Insets.EMPTY)));
     }
@@ -143,20 +161,6 @@ public class Gui extends Application {
         return String.format("%s%s", col, row);
     }
 
-    // EFFECTS: Creates all game cells and adds to layout
-    private void createCells(int columns, int rows) {
-        cells = new HashMap<>();
-        for (int col=0; col < columns; col++ ) {
-            for (int row=0; row < rows; row++ ) {
-                Label label = new Label(" ");
-                label.setMinSize(25, 25);
-                label.setBorder(new Border(new BorderStroke(Color.LIGHTGRAY, BorderStrokeStyle.SOLID,
-                        CornerRadii.EMPTY,BorderWidths.DEFAULT)));
-                cells.put(getCellKey(col, row), label);
-                gridPane.add(label, col, row);
-            }
-        }
-    }
 
     // EFFECTS: handles game states and updates UI
     public void runGame() {
@@ -180,18 +184,38 @@ public class Gui extends Application {
     // EFFECTS: updates all cells based on current game state
     private void update(Game game) {
         for (Label label: cells.values()) {
-            label.setBackground(new Background(new BackgroundFill(Paint.valueOf("whitesmoke"),
-                    CornerRadii.EMPTY, Insets.EMPTY)));
+            colorCell(label, BLANK_CELL_COLOR);
+            makeCellBorderVisible(false, label);
         }
         List<Block> blocks =  game.getBlocks();
         for (Block block: blocks) {
             colorCell(block.getColumn(), block.getRow(), block.getColor());
+            Label cellLabel = getCellLabel(block);
+            makeCellBorderVisible(true, cellLabel);
         }
 
         for (Block block: game.getShapeInPlay()) {
+            getCellKey(block.getColumn(), block.getRow());
             colorCell(block.getColumn(), block.getRow(), block.getColor());
+            Label cellLabel = getCellLabel(block);
+            makeCellBorderVisible(true, cellLabel);
+
         }
 
+    }
+
+    public Label getCellLabel(Block block) {
+        return cells.get(getCellKey(block.getColumn(), block.getRow()));
+    }
+
+    public void makeCellBorderVisible(Boolean visible, Label label) {
+        if (visible) {
+            label.setBorder(new Border(new BorderStroke(CELL_BORDER_COLOR, BorderStrokeStyle.SOLID,
+                    CornerRadii.EMPTY,BorderWidths.DEFAULT)));
+        } else {
+            label.setBorder(new Border(new BorderStroke(CELL_BORDER_COLOR, BorderStrokeStyle.NONE,
+                    CornerRadii.EMPTY,BorderWidths.DEFAULT)));
+        }
     }
 
     // EFFECTS: updates score with current score

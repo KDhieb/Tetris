@@ -94,12 +94,9 @@ public class Game extends Observable {
             for (int i = lowestRowReached - 1; i >= 0; i--) {
                 for (Block block: rowMap.get(i)) {
                     if (block.canMove(filledSquares, rowScoreCount, 0)) {
-                        System.out.println("Before: " + filledSquares);
                         filledSquares.remove(block.getPosition());
                         block.move(rowScoreCount, 0);
                         filledSquares.add(block.getPosition());
-                        System.out.println("After: " + filledSquares);
-                        System.out.println("----------");
                     }
                 }
             }
