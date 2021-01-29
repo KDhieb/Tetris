@@ -22,13 +22,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+// Represents graphical user interface of game
 public class Gui extends Application {
     Game game;
     ScoreTracker scoreTracker;
     HashMap<String, Label> cells;
     StackPane root;
     GridPane gridPane;
-    Scene gameScene;
+    Scene mainScene;
     BorderPane mainBorder;
     Label scoreLabel;
     Label messageLabel;
@@ -38,35 +39,48 @@ public class Gui extends Application {
         launch(args);
     }
 
+    // EFFECTS: initializes all JavaFx UI elements and game thread
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         primaryStage.setTitle("Tetris");
         this.root = new StackPane();
+        mainBorder = new BorderPane();
+        mainScene = new Scene(mainBorder, 500, 502);
+
+        initializeGameBoard();
+        initializeRightPanel();
+
+        primaryStage.setScene(mainScene);
+        primaryStage.show();
+
+        setQuitOnWindowClose(primaryStage);
+
+        initializeGame();
+    }
+
+    // EFFECTS: initializes game instance and begins game thread
+    private void initializeGame() {
         game = new Game();
         scoreTracker = new ScoreTracker();
         game.addObserver(scoreTracker);
-        gridPane = new GridPane();
-        gridPane.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID,
-                CornerRadii.EMPTY,BorderWidths.DEFAULT)));
-        mainBorder = new BorderPane();
-        mainBorder.setLeft(gridPane);
-        createCells(Game.getBoardCols(), Game.getBoardRows());
-        initializeRightPanel();
-//        gameScene = new Scene(gridPane, 500, 500);
-        gameScene = new Scene(mainBorder, 500, 502);
-
-        primaryStage.setScene(gameScene);
-        primaryStage.show();
-        setQuitOnWindowClose(primaryStage);
-
         startGameThread();
     }
 
+    // EFFECTS: initializes game board
+    private void initializeGameBoard() {
+        gridPane = new GridPane();
+        gridPane.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID,
+                CornerRadii.EMPTY,BorderWidths.DEFAULT)));
+        mainBorder.setLeft(gridPane);
+        createCells(Game.getBoardCols(), Game.getBoardRows());
 
+    }
+
+    // EFFECTS: begins game thread
     private void startGameThread() {
         Task < Void > task = new Task<Void>() {
             @Override
-            protected Void call() throws Exception {
+            protected Void call() {
                 runGame();
                 return null;
             }
@@ -75,16 +89,61 @@ public class Gui extends Application {
         gameThread.start();
     }
 
+    // EFFECTS: stops applications when window is closed
     private void setQuitOnWindowClose(Stage primaryStage) {
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                Platform.exit();
-                System.exit(0);
-            }
+        primaryStage.setOnCloseRequest(event -> {
+            Platform.exit();
+            System.exit(0);
         });
     }
 
+    // EFFECTS: initializes right side button and label panel
+    private void initializeRightPanel() {
+        BorderPane rightPane = new BorderPane();
+        mainBorder.setRight(rightPane);
+        initializeButtons(rightPane);
+        initializeLabels(rightPane);
+    }
+
+    // EFFECTS: creates and add buttons to layout
+    private void initializeButtons(BorderPane rightPane) {
+        Button resetBtn = new Button();
+        resetBtn.setText("Reset Game");
+        resetBtn.setOnAction(event -> restartGame());
+        resetBtn.setFocusTraversable(false);
+        rightPane.setBottom(resetBtn);
+        rightPane.setPadding(new Insets(10,30,10,0));
+
+    }
+
+    // EFFECTS: creates and add initial labels to layout
+    private void initializeLabels(BorderPane rightPane) {
+        scoreLabel = new Label("SCORE: 0");
+        scoreLabel.setFont(new Font(25));
+        scoreLabel.setMinSize(150, 20);
+
+        messageLabel = new Label("");
+        messageLabel.setFont(new Font(30));
+        messageLabel.setMinSize(150, 20);
+
+        rightPane.setTop(scoreLabel);
+        rightPane.setCenter(messageLabel);
+    }
+
+    // EFFECTS: color cells based on given shape color
+    private void colorCell(int col, int row, String color) {
+        Label label = cells.get(getCellKey(col, row));
+        label.setBackground(new Background(new BackgroundFill(Paint.valueOf(color),
+                CornerRadii.EMPTY, Insets.EMPTY)));
+    }
+
+    // EFFECTS: gets unique cell key given coordinates
+    // Helper method to find appropriate cell labels
+    private String getCellKey(int col, int row) {
+        return String.format("%s%s", col, row);
+    }
+
+    // EFFECTS: Creates all game cells and adds to layout
     private void createCells(int columns, int rows) {
         cells = new HashMap<>();
         for (int col=0; col < columns; col++ ) {
@@ -99,6 +158,7 @@ public class Gui extends Application {
         }
     }
 
+    // EFFECTS: handles game states and updates UI
     public void runGame() {
         initializeEventHandlers();
         while (!game.lostGame) {
@@ -117,6 +177,7 @@ public class Gui extends Application {
         updateMessageLabel("GAME OVER!");
     }
 
+    // EFFECTS: updates all cells based on current game state
     private void update(Game game) {
         for (Label label: cells.values()) {
             label.setBackground(new Background(new BackgroundFill(Paint.valueOf("whitesmoke"),
@@ -133,57 +194,20 @@ public class Gui extends Application {
 
     }
 
-
+    // EFFECTS: updates score with current score
     private void updateScore() {
         Platform.runLater(() -> scoreLabel.setText("SCORE: " + scoreTracker.getScore()));
     }
 
+    // EFFECTS: updates message status
     private void updateMessageLabel(String msg){
         Platform.runLater(() -> messageLabel.setText(msg));
     }
 
-    private void initializeRightPanel() {
-        BorderPane rightPane = new BorderPane();
-        mainBorder.setRight(rightPane);
-        initializeButtons(rightPane);
-        initializeLabels(rightPane);
-    }
-
-    private void initializeButtons(BorderPane rightPane) {
-        Button resetBtn = new Button();
-        resetBtn.setText("Reset Game");
-        resetBtn.setOnAction(event -> restartGame());
-        resetBtn.setFocusTraversable(false);
-        rightPane.setBottom(resetBtn);
-        rightPane.setPadding(new Insets(10,50,10,0));
-
-    }
-
-    private void initializeLabels(BorderPane rightPane) {
-        scoreLabel = new Label("SCORE: 0");
-        scoreLabel.setFont(new Font(24));
-        scoreLabel.setMinSize(150, 20);
-
-        messageLabel = new Label("");
-        messageLabel.setFont(new Font(30));
-        messageLabel.setMinSize(150, 20);
-
-        rightPane.setTop(scoreLabel);
-        rightPane.setCenter(messageLabel);
-    }
-
-    private void colorCell(int col, int row, String color) {
-        Label label = cells.get(getCellKey(col, row));
-        label.setBackground(new Background(new BackgroundFill(Paint.valueOf(color),
-                CornerRadii.EMPTY, Insets.EMPTY)));
-    }
-
-    private String getCellKey(int col, int row) {
-        return String.format("%s%s", col, row);
-    }
-
+    // EFFECTS: resets game to initial state
     public void restartGame() {
         game.resetGame();
+        updateScore();
         updateMessageLabel("");
         gameThread.stop();
         startGameThread();
@@ -194,8 +218,9 @@ public class Gui extends Application {
         }
     }
 
+    // EFFECTS: handles key events
     public void initializeEventHandlers() {
-        gameScene.setOnKeyPressed(event -> {
+        mainScene.setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case LEFT: game.moveLeft(); break;
                 case RIGHT: game.moveRight(); break;
@@ -203,6 +228,4 @@ public class Gui extends Application {
             }
         });
     }
-
-
 }

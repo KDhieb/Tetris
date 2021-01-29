@@ -1,8 +1,6 @@
 package models.shapes;
 
-
 import models.Block;
-import models.Game;
 import models.Moves;
 
 import java.util.ArrayList;
@@ -10,6 +8,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+// Represents a generic Shape made up of blocks
 public abstract class Shape implements Iterable<Block> {
     protected List<Block> blocks;
     String color;
@@ -19,11 +18,23 @@ public abstract class Shape implements Iterable<Block> {
     Block b3;
     Block b4;
 
+    // EFFECTS: initializes a shape with default direction
     public Shape() {
         blocks = new ArrayList<>();
         direction = Direction.DEFAULT;
     }
 
+    /**
+     * Initializes inner 4 blocks
+     * @param row1 b1 row position
+     * @param col1 b1 column position
+     * @param row2 b2 row position
+     * @param col2 b2 column position
+     * @param row3 b3 row position
+     * @param col3 b3 column position
+     * @param row4 b4 row position
+     * @param col4 b4 column position
+     */
     public void initializeBlocks(int row1, int col1, int row2, int col2,
                                  int row3, int col3, int row4, int col4) {
         this.b1 = new Block(col1,row1, color);
@@ -33,11 +44,22 @@ public abstract class Shape implements Iterable<Block> {
         blocks.addAll(Arrays.asList(b1, b2, b3, b4));
     }
 
+
     public abstract void rotate(List<String> filledSquares);
 
-    // MODIFIES: this
-    // EFFECTS: checks if each block can rotate safely, if so rotates them appropriately
-    // Numbers correspond to blocks (row1 and col1 represent row and column of b1)
+    /**
+     * Checks if each block can rotate safely, if so rotates them appropriately.
+     * Numbers correspond to blocks (row1 and col1 represent row and column of b1).
+     * @param filledSquares list of string positions of filled blocks
+     * @param row1 b1 row position
+     * @param col1 b1 column position
+     * @param row2 b2 row position
+     * @param col2 b2 column position
+     * @param row3 b3 row position
+     * @param col3 b3 column position
+     * @param row4 b4 row position
+     * @param col4 b4 column position
+     */
     protected void rotateInnerBlocks(List<String> filledSquares,
                                      int row1, int col1, int row2, int col2,
                                      int row3, int col3, int row4, int col4) {
@@ -54,10 +76,12 @@ public abstract class Shape implements Iterable<Block> {
         }
     }
 
-    public List<Block> getBlocks() {
-        return blocks;
-    }
-
+    /**
+     *
+     * @param filledSquares list of string positions of filled blocks
+     * @param move Possible move type
+     * @return true if all blocks in shape can move without collision
+     */
     public Boolean move(List<String> filledSquares, Moves move) {
         switch (move) {
             case DOWN:
@@ -92,6 +116,14 @@ public abstract class Shape implements Iterable<Block> {
         }
     }
 
+    /**
+     *
+     * @param filledSquares list of string positions of filled blocks
+     * @param rowMove units to move in row space
+     * @param columnMove units to move in column space
+     * @return true if shape can move
+     */
+    // EFFECTS: checks if shape can move without colliding
     private Boolean canMove(List<String> filledSquares, int rowMove, int columnMove) {
         for (Block block: blocks) {
             if (!block.canMove(filledSquares, rowMove, columnMove)) {
@@ -111,37 +143,6 @@ public abstract class Shape implements Iterable<Block> {
 
     private Boolean canMoveRight(List<String> filledSquares) {
         return canMove(filledSquares, 0, 1);
-    }
-
-
-
-    private Boolean intersects(Block checkBlock, int rowMove, int columnMove) {
-        int checkRow = checkBlock.getRow();
-        int checkColumn = checkBlock.getColumn();
-
-        for (Block block : blocks) {
-            int nextRow = block.getRow() + rowMove;
-            int nextCol = block.getColumn() + columnMove;
-
-            if (nextRow == checkRow && nextCol == checkColumn) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Boolean reachesBoundary(int rowMove, int columnMove) {
-        int bottomRow = Game.getBoardRows();
-        int outerColumn = Game.getBoardCols();
-
-        for (Block block: blocks) {
-            int nextRow = block.getRow() + rowMove;
-            int nextCol = block.getColumn() + columnMove;
-            if (nextRow == bottomRow || nextCol == outerColumn || nextCol < 0) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

@@ -3,17 +3,26 @@ package models;
 import java.util.List;
 import java.util.regex.Pattern;
 
+// Represents a single tetris block
 public class Block {
     private final String color;
     private Integer column;
     private Integer row;
-    private String position;
+    private String position; // Format: row#,col#
 
 
     public Block(int column, int row, String color) {
         this.column = column;
         this.row = row;
         this.color = color;
+        updatePosition();
+    }
+
+
+    // EFFECTS: moves block and updates position
+    public void move(int rowUnits, int columnUnits) {
+        this.row += rowUnits;
+        this.column += columnUnits;
         updatePosition();
     }
 
@@ -29,19 +38,6 @@ public class Block {
         move(0, 1);
     }
 
-    public void drop() {
-        for (int i = 0; i < Game.BOARD_COLS; i++) {
-            //
-        }
-    }
-
-
-    public void move(int rowUnits, int columnUnits) {
-        this.row += rowUnits;
-        this.column += columnUnits;
-        updatePosition();
-    }
-
     // EFFECTS: Checks if block will move out of bounds
     // Then checks if block will intersect with another block
     public Boolean canMove(List<String> filledSquares, int rowUnits, int columnUnits) {
@@ -53,15 +49,15 @@ public class Block {
         return !filledSquares.contains(String.format("%d,%d", row + rowUnits, column + columnUnits));
     }
 
+    // Updates string position
+    public void updatePosition() {
+        this.position = String.format("%d,%d", row, column);
+    }
 
     public String getColor() {
         return color;
     }
 
-    // Updates string position
-    public void updatePosition() {
-        this.position = String.format("%d,%d", row, column);
-    }
 
     public String getPosition() {
         return position;
