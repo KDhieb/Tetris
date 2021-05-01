@@ -13,6 +13,7 @@ public class Game extends Observable {
     private final List<Block> blocks;
     private final List<String> filledSquares;
     public boolean lostGame;
+    private int lastShapeIdx = 0;
 
     Shape shapeInPlay;
 
@@ -20,7 +21,7 @@ public class Game extends Observable {
     public Game() {
         blocks = new ArrayList<>();
         filledSquares = new ArrayList<>();
-        shapeTypes = new ArrayList<>(Arrays.asList(ShapesEnum.T, ShapesEnum.S, ShapesEnum.L,
+        shapeTypes = new ArrayList<>(Arrays.asList(ShapesEnum.T, ShapesEnum.S, ShapesEnum.Z, ShapesEnum.L, ShapesEnum.RL,
                 ShapesEnum.LINE, ShapesEnum.BOX));
         selectNewShape();
         lostGame = false;
@@ -31,15 +32,30 @@ public class Game extends Observable {
         shapeInPlay = randomShapeCreator();
     }
 
-    // EFFECTS: randomly selects and initializes a shape
-    public Shape randomShapeCreator() {
+    // EFFECTS: iterates through the shape list
+    public ShapesEnum orderedShapePicker() {
+        lastShapeIdx = ++lastShapeIdx % shapeTypes.size();
+        return shapeTypes.get(lastShapeIdx);
+    }
+
+    // EFFECTS: picks a shape randomly
+    private ShapesEnum randomShapePicker() {
         Random random = new Random();
         int randomIndex = random.nextInt(shapeTypes.size());
-        ShapesEnum chosenShape = shapeTypes.get(randomIndex);
+        return shapeTypes.get(randomIndex);
+    }
+
+    // EFFECTS: randomly selects and initializes a shape
+    public Shape randomShapeCreator() {
+        ShapesEnum chosenShape = orderedShapePicker();
         if (chosenShape == ShapesEnum.S) {
             return new SShape();
-        } else if (chosenShape == ShapesEnum.L) {
+        } else if (chosenShape == ShapesEnum.Z) {
+            return new ZShape();
+        }else if (chosenShape == ShapesEnum.L) {
             return new LShape();
+        } else if (chosenShape == ShapesEnum.RL) {
+            return new RLShape();
         } else if (chosenShape == ShapesEnum.T) {
             return new TShape();
         } else if (chosenShape == ShapesEnum.BOX) {
@@ -48,6 +64,7 @@ public class Game extends Observable {
             return new LineShape();
         }
     }
+
 
     // EFFECTS: checks and clears filled rows
     public void checkAndClearRows() {
